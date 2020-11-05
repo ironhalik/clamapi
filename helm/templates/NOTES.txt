@@ -1,0 +1,2 @@
+{{ .Chart.Name }}, version {{ .Chart.AppVersion }} deployed to namespace "{{ .Release.Namespace }}"
+

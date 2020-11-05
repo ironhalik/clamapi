@@ -1,0 +1,5 @@
+name: clamav-api
+description: clamav-api
+version: 1
+apiVersion: v1
+appVersion: "v0.1"

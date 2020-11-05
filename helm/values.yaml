@@ -1,0 +1,38 @@
+---
+image: tivix/clamav-api:v1
+
+api:
+  replicas: 2
+  gunicornWorkers: 2
+  disruptionBudget: true
+  clamdHost: clamd-service
+  clamdPort: 3310
+  waitForClamd: true
+  requests:
+    cpu: 0.01
+    memory: 32Mi
+  limits:
+    cpu: 0.1
+    memory: 512Mi
+
+clamd:
+  replicas: 1
+  disruptionBudget: true
+  requests:
+    cpu: 0.01
+    memory: 1152Mi
+  limits:
+    cpu: 1
+    memory: 1536Mi
+
+freshclam:
+  freshclamChecks: 12
+  clamdHost: clamd-service
+  clamdPort: 3310
+  waitForClamd: true
+  requests:
+    cpu: 0.01
+    memory: 32Mi
+  limits:
+    cpu: 1
+    memory: 1536Mi
