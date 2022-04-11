@@ -1,4 +1,4 @@
-FROM python:3.8-alpine3.15
+FROM python:3.10-alpine3.15
 
 RUN apk add --no-cache \
     curl \
@@ -9,8 +9,7 @@ RUN apk add --no-cache \
     curl -o /usr/local/bin/waitforit -sSL https://github.com/maxcnunes/waitforit/releases/download/v2.4.1/waitforit-linux_amd64 && \
     chmod +x /usr/local/bin/waitforit &&\
     pip install --no-cache-dir \
-    Jinja2==3.0.3 \
-    flask==1.1.2 \
+    flask==2.1.1 \
     clamd==1.0.2 \
     gunicorn==20.0.4
 
