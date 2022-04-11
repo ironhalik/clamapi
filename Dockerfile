@@ -1,4 +1,4 @@
-FROM python:3.8-alpine3.12
+FROM python:3.8-alpine3.15
 
 RUN apk add --no-cache \
     curl \
