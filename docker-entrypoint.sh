@@ -1,25 +1,26 @@
-#!/bin/ash -e
+#!/bin/ash
+set -e
 
-if [[ "${1}" == "clamd" ]]; then
-    if [ -d "/var/lib/clamav-build/" ] && ! ls /var/lib/clamav/ | grep -q .; then
-        echo "Copying images database definitions from image."
-        cp -rp /var/lib/clamav-build/* /var/lib/clamav/
+if [ "${1}" == "clamd" ]; then
+    if [ "${FRESHCLAM_INIT:-true}" == "true" ]; then
+        echo "Initializing freshclam"
+        freshclam --stdout
     fi
     exec clamd
-elif [[ "${1}" == "freshclam" ]]; then
-    if [[ "${WAIT_FOR_CLAMD}" == "true" ]]; then
-        echo "Waiting for clamd on ${CLAMD_HOST}:${CLAMD_PORT}"
-        waitforit -host=${CLAMD_HOST} -port=${CLAMD_PORT} -timeout=300
-        echo ${CLAMD_HOST} is up
+elif [ "${1}" == "freshclam" ]; then
+    if [ "${WAIT_FOR_CLAMD:-true}" == "true" ]; then
+        echo "Waiting for clamd on ${CLAMD_HOST:-clamd}:${CLAMD_PORT:-3310}"
+        waitforit -host="${CLAMD_HOST:-clamd}" -port="${CLAMD_PORT:-3310}" -timeout=300
+        echo "${CLAMD_HOST:-clamd} is up"
     fi
-    exec freshclam --daemon --foreground --checks="${FRESHCLAM_CHECKS}"
-elif [[ "${1}" == "api" ]]; then
-    if [[ "${WAIT_FOR_CLAMD}" == "true" ]]; then
-        echo "Waiting for clamd on ${CLAMD_HOST}:${CLAMD_PORT}"
-        waitforit -host=${CLAMD_HOST} -port=${CLAMD_PORT} -timeout=300
-        echo ${CLAMD_HOST} is up
+    exec freshclam --stdout --daemon --foreground --daemon-notify=/etc/clamav/clamd.conf --checks="${FRESHCLAM_CHECKS:-12}"
+elif [ "${1}" == "api" ]; then
+    if [ "${WAIT_FOR_CLAMD:-true}" == "true" ]; then
+        echo "Waiting for clamd on ${CLAMD_HOST:-clamd}:${CLAMD_PORT:-3310}"
+        waitforit -host="${CLAMD_HOST:-clamd}" -port="${CLAMD_PORT:-3310}" -timeout=300
+        echo "${CLAMD_HOST:-clamd} is up"
     fi
-    exec gunicorn -c gunicorn.py api:app
+    exec gunicorn api:app
 else
     exec "${@}"
 fi

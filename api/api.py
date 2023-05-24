@@ -3,8 +3,15 @@ from clamd import ClamdNetworkSocket
 from os import getenv
 
 app = Flask(__name__)
-clamd = ClamdNetworkSocket(host=getenv("CLAMD_HOST"), port=int(getenv("CLAMD_PORT")))
+clamd = ClamdNetworkSocket(
+    host=getenv("CLAMD_HOST", "clamd"), port=int(getenv("CLAMD_PORT", 3310))
+)
 clamd.ping()
+
+
+@app.route("/")
+def ok():
+    return "ok"
 
 
 @app.route("/version")
