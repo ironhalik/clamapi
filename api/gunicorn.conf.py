@@ -1,11 +1,11 @@
 from os import getenv
 
-bind = '0.0.0.0:8000'
+bind = "0.0.0.0:8000"
 backlog = 2048
 
 
-workers = getenv('GUNICORN_WORKERS', 1)
-timeout = getenv('GUNICORN_TIMEOUT', 120)
+workers = getenv("GUNICORN_WORKERS", 2)
+timeout = getenv("GUNICORN_TIMEOUT", 120)
 keepalive = 5
 
 
@@ -18,9 +18,9 @@ group = None
 tmp_upload_dir = None
 
 
-errorlog = '-'
-loglevel = 'info'
-accesslog = '-'
+errorlog = "-"
+loglevel = "info"
+accesslog = "-"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 
@@ -47,6 +47,7 @@ def worker_int(worker):
     import threading
     import sys
     import traceback
+
     id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
     code = []
     for threadId, stack in sys._current_frames().items():
