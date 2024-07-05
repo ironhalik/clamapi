@@ -1,5 +1,5 @@
 ---
-image: tivix/clamav-api:v1
+image: ghcr.io/clamapi:v1
 
 api:
   replicas: 2

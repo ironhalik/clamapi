@@ -80,7 +80,7 @@ spec:
 {{- if .Values.api.disruptionBudget }}
 ---
 kind: PodDisruptionBudget
-apiVersion: policy/v1beta1
+apiVersion: policy/v1
 metadata:
   name: api-pdb
 spec:
