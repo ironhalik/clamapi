@@ -17,7 +17,7 @@ $ curl -s -F "file=@files/eicar.zip" -F "file=@files/clean.zip" http://localhost
   "status": "failed"
 }
 ```
-The docker image contains malware definitions database available at docker build time, but the service is deployed with freshclam daemon, which will keep the malware definitions up to date.
+By default, the container will use feshclam to download latest malware definitions at startup. The image can be run with `command: freshclam`, which will start a freshclam deamon, keeping the definitions up to date.
 
 
 #### Environment variables:
