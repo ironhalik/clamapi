@@ -1,0 +1,46 @@
+---
+volumes:
+  clamd-database:  
+
+services:
+  api:
+    image: clamapi:dev
+    build:
+      context: ./
+    restart: unless-stopped
+    environment:
+      CLAMD_HOST: clamd
+    ports:
+      - 8000:8000
+    command: api
+    depends_on:
+      clamd:
+        condition: service_healthy
+
+  freshclam:
+    image: clamapi:dev
+    build:
+      context: ./
+    restart: unless-stopped
+    environment:
+      CLAMD_HOST: clamd
+    command: freshclam
+    volumes:
+      - clamd-database:/var/lib/clamav/
+    depends_on:
+      clamd:
+        condition: service_healthy
+
+  clamd:
+    image: clamapi:dev
+    build:
+      context: ./
+    restart: unless-stopped
+    command: clamd
+    volumes:
+      - clamd-database:/var/lib/clamav/
+    healthcheck:
+      test: nc -z 127.0.0.1 3310
+      interval: 10s
+      timeout: 3s
+      retries: 5

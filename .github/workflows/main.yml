@@ -1,28 +1,86 @@
-name: clamav-api
+name: Build, scan, and publish the image
 
 on:
   push:
+    branches:
+      - main
     tags:
       - v*
+  workflow_dispatch:
 
 jobs:
-  main:
-    name: Build and push
+  build:
+    name: Build Docker image
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - uses: FranzDiebold/github-env-vars-action@v2
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Prepare docker buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASS }}" | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
+        uses: docker/setup-buildx-action@v3
+      - name: Login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
       - name: Build Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: tivix/clamav-api:${{ github.sha }}, tivix/clamav-api:${{ env.CI_REF_NAME }}
+          tags: ghcr.io/ironhalik/clamapi:${{ github.sha }}
+
+  test-trivy:
+    name: Run Trivy
+    runs-on: ubuntu-22.04
+    needs:
+      - build
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Pull current image
+        run: docker pull ghcr.io/ironhalik/clamapi:${{ github.sha }}
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.23.0
+        with:
+          image-ref: ghcr.io/ironhalik/clamapi:${{ github.sha }}
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "HIGH,CRITICAL"
+          skip-dirs: /usr/local/bin/
+          scanners: "vuln"
+          hide-progress: true
+
+  publish-tags:
+    name: Publish Dist Images
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - test-trivy
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Export extra envs
+        uses: FranzDiebold/github-env-vars-action@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Prepare docker buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ghcr.io/ironhalik/clamapi:${{ env.CI_REF_NAME }}
