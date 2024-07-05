@@ -1,0 +1,49 @@
+---
+name: "Periodic scan"
+
+on:
+  schedule:
+  - cron: "00 00 * * 1"
+  workflow_dispatch:
+
+jobs:
+  test-trivy:
+    name: Run Trivy
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Pull current image
+        run: docker pull ghcr.io/ironhalik/clamapi:${{ github.sha }}
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.23.0
+        with:
+          image-ref: ghcr.io/ironhalik/clamapi:${{ github.sha }}
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "HIGH,CRITICAL"
+          scanners: "vuln"
+          hide-progress: true
+    
+  test-bats:
+    name: Run Bats Tests
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Pull current image
+        run: docker pull ghcr.io/ironhalik/clamapi:${{ github.sha }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Run bats tests
+        run: |
+          export IMAGE=ghcr.io/ironhalik/clamapi:${{ github.sha }}
+          docker compose up --wait
+          cd ./test/
+          ./bats/bin/bats ./
+          

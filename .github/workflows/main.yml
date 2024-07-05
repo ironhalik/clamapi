@@ -51,7 +51,6 @@ jobs:
           ignore-unfixed: true
           vuln-type: "os,library"
           severity: "HIGH,CRITICAL"
-          skip-dirs: /usr/local/bin/
           scanners: "vuln"
           hide-progress: true
 
@@ -72,10 +71,10 @@ jobs:
           submodules: true
       - name: Run bats tests
         run: |
+          export IMAGE=ghcr.io/ironhalik/clamapi:${{ github.sha }}
           docker compose up --wait
           cd ./test/
           ./bats/bin/bats ./
-          export IMAGE=ghcr.io/ironhalik/clamapi:${{ github.sha }}
           
   publish-tags:
     name: Publish Dist Images
