@@ -2,7 +2,7 @@
 A simple ClamAV service that exposes basic `clamd` functionality via a http api.  
 Once the service is deployed using the provided Helm chart, you can POST any files to be scanned to `http://<host>/scan`. A typical request will look like this:
 ```
-$ curl -s -F "file=@files/eicar.zip" -F "file=@files/clean.zip" http://localhost:8000/scan | jq .
+$ curl -s -F "file=@test/files/eicar.zip" -F "file=@test/files/clean.zip" http://localhost:8000/scan | jq .
 {
   "results": {
     "clean.zip": [

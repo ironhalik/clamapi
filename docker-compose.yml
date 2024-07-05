@@ -4,26 +4,30 @@ volumes:
 
 services:
   api:
-    image: clamapi:dev
+    image: ${IMAGE}
     build:
       context: ./
     restart: unless-stopped
-    environment:
-      CLAMD_HOST: clamd
+    env_file: .env
     ports:
       - 8000:8000
     command: api
+    healthcheck:
+      test: nc -z 127.0.0.1 8000
+      interval: 10s
+      timeout: 3s
+      retries: 5
     depends_on:
       clamd:
         condition: service_healthy
 
   freshclam:
-    image: clamapi:dev
+    image: ${IMAGE}
     build:
       context: ./
     restart: unless-stopped
-    environment:
-      CLAMD_HOST: clamd
+    profiles: [freshclam]
+    env_file: .env
     command: freshclam
     volumes:
       - clamd-database:/var/lib/clamav/
@@ -32,10 +36,11 @@ services:
         condition: service_healthy
 
   clamd:
-    image: clamapi:dev
+    image: ${IMAGE}
     build:
       context: ./
     restart: unless-stopped
+    env_file: .env
     command: clamd
     volumes:
       - clamd-database:/var/lib/clamav/
