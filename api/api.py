@@ -6,7 +6,13 @@ app = Flask(__name__)
 clamd = ClamdNetworkSocket(
     host=getenv("CLAMD_HOST", "clamd"), port=int(getenv("CLAMD_PORT", 3310))
 )
-clamd.ping()
+
+try:
+    clamd.ping()
+except ConnectionRefusedError as e:
+    print("Could not connect to clamd. Is the service running?")
+    print(e)
+    exit(1)
 
 
 @app.route("/")
