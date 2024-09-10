@@ -2,7 +2,9 @@ FROM python:3.12-alpine3.20
 
 RUN apk add --no-cache \
     clamav \
-    clamav-libunrar &&\
+    clamav-libunrar \
+    # CVE-2024-6197 \
+    'libcurl>=8.9.0-r0' &&\
     pip install --no-cache-dir \
     flask==2.3.3 \
     clamd==1.0.2 \
