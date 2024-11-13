@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: Build Docker image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
@@ -34,15 +34,19 @@ jobs:
 
   test-trivy:
     name: Run Trivy
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - build
     permissions:
       contents: read
       packages: read
     steps:
+      - name: Login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
       - name: Pull current image
         run: docker pull ghcr.io/ironhalik/clamapi:${{ github.sha }}
+      - name: Log out of ghcr.io
+        run: docker logout ghcr.io
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.23.0
         with:
@@ -56,13 +60,15 @@ jobs:
 
   test-bats:
     name: Run Bats Tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - build
     permissions:
       contents: read
       packages: read
     steps:
+      - name: Login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
       - name: Pull current image
         run: docker pull ghcr.io/ironhalik/clamapi:${{ github.sha }}
       - name: Checkout repository
@@ -75,14 +81,14 @@ jobs:
           docker compose up --wait
           cd ./test/
           ./bats/bin/bats ./
-          
+
   publish-tags:
     name: Publish Dist Images
     if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - test-trivy
       - test-bats
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
