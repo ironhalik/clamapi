@@ -44,8 +44,6 @@ spec:
               value: {{ .Values.api.clamdHost }}
             - name: CLAMD_PORT
               value: {{ .Values.api.clamdPort | quote }}
-            - name: WAIT_FOR_CLAMD
-              value: {{ .Values.api.waitForClamd | quote }}
           ports:
             - containerPort: 8000
               protocol: TCP
@@ -70,7 +68,7 @@ spec:
             successThreshold: 1
           livenessProbe:
             httpGet:
-              path: /version
+              path: /
               port: 8000
             timeoutSeconds: 5
             initialDelaySeconds: 90

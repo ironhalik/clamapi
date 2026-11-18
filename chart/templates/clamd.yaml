@@ -73,12 +73,6 @@ spec:
           imagePullPolicy: Always
           args: ["freshclam"]
           env:
-            - name: CLAMD_HOST
-              value: {{ .Values.freshclam.clamdHost }}
-            - name: CLAMD_PORT
-              value: {{ .Values.freshclam.clamdPort | quote }}
-            - name: WAIT_FOR_CLAMD
-              value: {{ .Values.freshclam.waitForClamd | quote }}
             - name: FRESHCLAM_CHECKS
               value: {{ .Values.freshclam.freshclamChecks | quote }}
           securityContext:

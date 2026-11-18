@@ -1,18 +1,42 @@
-from flask import Flask, request
-from clamd import ClamdNetworkSocket
+import re
+import socket
+import struct
 from os import getenv
 
-app = Flask(__name__)
-clamd = ClamdNetworkSocket(
-    host=getenv("CLAMD_HOST", "clamd"), port=int(getenv("CLAMD_PORT", 3310))
+from flask import Flask, request
+
+CLAMD_HOST = getenv("CLAMD_HOST", "clamd")
+CLAMD_PORT = int(getenv("CLAMD_PORT", "3310"))
+CHUNK_SIZE = 64 * 1024
+SCAN_RESPONSE = re.compile(
+    r"^stream: (?:(?P<signature>.+) )?(?P<status>OK|FOUND|ERROR)$"
 )
 
-try:
-    clamd.ping()
-except ConnectionRefusedError as e:
-    print("Could not connect to clamd. Is the service running?")
-    print(e)
-    exit(1)
+app = Flask(__name__)
+# Matches clamd's default StreamMaxLength: oversized uploads get a 413, not an error.
+app.config["MAX_CONTENT_LENGTH"] = int(
+    getenv("MAX_CONTENT_LENGTH", str(100 * 1024 * 1024))
+)
+
+
+def clamd(command, stream=None):
+    with socket.create_connection((CLAMD_HOST, CLAMD_PORT)) as sock:
+        sock.sendall(b"z" + command + b"\0")
+        if stream is not None:
+            while chunk := stream.read(CHUNK_SIZE):
+                sock.sendall(struct.pack("!L", len(chunk)) + chunk)
+            sock.sendall(struct.pack("!L", 0))
+        response = b""
+        while data := sock.recv(4096):
+            response += data
+    return response.rstrip(b"\0").decode()
+
+
+def scan(stream):
+    response = clamd(b"INSTREAM", stream)
+    if match := SCAN_RESPONSE.match(response):
+        return [match["status"], match["signature"]]
+    return ["ERROR", response]
 
 
 @app.route("/")
@@ -22,12 +46,7 @@ def ok():
 
 @app.route("/version")
 def clamd_version():
-    return clamd.version() + "\n"
-
-
-@app.route("/reload")
-def clamd_reload():
-    return clamd.reload() + "\n"
+    return clamd(b"VERSION") + "\n"
 
 
 @app.route("/scan", methods=["POST"])
@@ -37,8 +56,10 @@ def clamd_scan():
 
     if files := request.files.getlist("file"):
         for file in files:
-            result = clamd.instream(file)["stream"]
-            results[file.filename] = result
+            result = scan(file.stream)
+            # Keyed by filename: a later clean file must not hide a detection.
+            if results.get(file.filename, ["OK"])[0] == "OK":
+                results[file.filename] = result
             if result[0] != "OK":
                 status = "failed"
         return {"status": status, "results": results}

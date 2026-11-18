@@ -4,8 +4,8 @@ bind = "0.0.0.0:8000"
 backlog = 2048
 
 
-workers = getenv("GUNICORN_WORKERS", 2)
-timeout = getenv("GUNICORN_TIMEOUT", 120)
+workers = int(getenv("GUNICORN_WORKERS", "2"))
+timeout = int(getenv("GUNICORN_TIMEOUT", "120"))
 keepalive = 5
 
 

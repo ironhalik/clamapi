@@ -24,7 +24,7 @@ By default, the container will use feshclam to download latest malware definitio
 ```
 CLAMD_HOST=clamd                  # The location of clamd daemon
 CLAMD_PORT=3310                   # The TCP port clamd listens on
-WAIT_FOR_CLAMD=true               # Whether to wait for clamd to respond
+MAX_CONTENT_LENGTH=104857600      # Max request size in bytes; larger uploads get a 413
 FRESHCLAM_CHECKS=12               # Number of times per day freshclam should check for new database
 ```
 
