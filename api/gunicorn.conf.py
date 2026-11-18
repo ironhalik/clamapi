@@ -7,6 +7,8 @@ backlog = 2048
 workers = int(getenv("GUNICORN_WORKERS", "2"))
 timeout = int(getenv("GUNICORN_TIMEOUT", "120"))
 keepalive = 5
+# The pod runs as nobody with HOME=/, so the default $HOME/.gunicorn socket dir is unwritable.
+control_socket_disable = True
 
 
 proc_name = None

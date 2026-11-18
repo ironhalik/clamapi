@@ -1,5 +1,5 @@
 ---
-image: ghcr.io/ironhalik/clamapi:v1.6
+image: ghcr.io/ironhalik/clamapi:v1.7
 
 api:
   replicas: 2

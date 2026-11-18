@@ -12,6 +12,9 @@ services:
     ports:
       - 8000:8000
     command: api
+    user: "65534:65534"
+    environment:
+      HOME: /
     healthcheck:
       test: nc -z 127.0.0.1 8000
       interval: 10s
